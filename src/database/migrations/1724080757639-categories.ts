@@ -1,11 +1,12 @@
 /* eslint-disable prettier/prettier */
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import { MigrationInterface, QueryRunner, Table, TableForeignKey } from "typeorm";
 
-export class CreateUsers1723823252052 implements MigrationInterface {
+export class Categories1724080757639 implements MigrationInterface {
+
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({
-                name: 'users',
+                name: 'categories',
                 columns: [
                     {
                         name: 'id',
@@ -15,23 +16,8 @@ export class CreateUsers1723823252052 implements MigrationInterface {
                         generationStrategy: 'increment',
                     },
                     {
-                        name: 'email',
-                        type: 'varchar',
-                    },
-                    {
-                        name: 'role',
-                        type: 'enum',
-                        enum: ['user', 'admin'],
-                        default: `'user'`,
-                    },
-                    {
-                        name: 'password',
-                        type: 'varchar',
-                    },
-                    {
                         name: 'name',
                         type: 'varchar',
-                        isNullable: true,
                     },
                     {
                         name: 'createdAt',
@@ -44,16 +30,29 @@ export class CreateUsers1723823252052 implements MigrationInterface {
                         default: 'now()',
                     },
                     {
-                        name: 'favoriteTheme',
-                        type: 'varchar',
-                        isNullable: true,
+                        name: 'userId',
+                        type: 'integer',
                     },
                 ],
+            })
+        );
+
+        await queryRunner.createForeignKey(
+            'categories',
+            new TableForeignKey({
+                columnNames: ['userId'],
+                referencedColumnNames: ['id'],
+                referencedTableName: 'users',
+                onDelete: 'CASCADE',
             })
         );
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropTable('users');
+        const table = await queryRunner.getTable('categories');
+        const foreignKey = table.foreignKeys.find(fk => fk.columnNames.indexOf('userId') !== -1);
+        await queryRunner.dropForeignKey('categories', foreignKey);
+        await queryRunner.dropTable('categories');
     }
+
 }
